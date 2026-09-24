@@ -129,7 +129,6 @@
               asignables: function () { return (ARRANQUE && ARRANQUE.asignables) || []; },
               requerimientos: function () { return (ARRANQUE && ARRANQUE.requerimientos) || []; },
               secretarias: function () { return (ARRANQUE && ARRANQUE.secretarias) || []; },
-              enlaceInformes: function () { return (ARRANQUE && ARRANQUE.enlaceInformes) || ''; },
               /* los números del inicio siguen a la lista sin otro viaje */
               alCambiar: function () {} };
     MODULOS.forEach(function (m) { if (window[m]) window[m].configurar(c); });

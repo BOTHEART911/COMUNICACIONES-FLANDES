@@ -2869,7 +2869,6 @@
 .cm-prox__f--tarde b, .cm-prox__f--tarde small { color: var(--k-malo); }
 
 /* mis informes y directorio */
-.cm-hoja { margin: 0 0 10px auto; display: inline-flex; }
 .cm .rp-fila { cursor: pointer; }
 .cm-corregir { border: 0; background: none; font: inherit; cursor: pointer; }
 

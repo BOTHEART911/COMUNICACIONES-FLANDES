@@ -11,8 +11,8 @@
    (cada solicitud es un bloque, agrupado por quien la atendió: el
    informe para leer) o en Excel (una fila por solicitud).
 
-   "Mi hoja de informes" abre el enlace personal que la app vieja tenía
-   en la hoja PRENSA (columna ENLACE), si la persona lo tiene.
+   10.1: se quitó "Abrir mi hoja de informes" (el enlace de la hoja
+   PRENSA de la app vieja). El informe sale de aquí, en PDF o Excel.
    ============================================================ */
 (function () {
   'use strict';
@@ -85,12 +85,6 @@
     O().cabecera(caja, 'pdf', 'MIS INFORMES', esAdmin()
       ? 'Lo que atendió el equipo en el periodo: realizadas, en proceso y pendientes, por persona. Descárgalo en PDF o Excel.'
       : 'Lo que has atendido en el periodo. Descárgalo en PDF o Excel para tu informe de actividades.');
-    var enl = C.enlaceInformes && C.enlaceInformes();
-    if (enl) {
-      var hj = K.nodo('<a class="kit-btn kit-btn--plano cm-hoja" target="_blank" rel="noopener">' + K.icono('hoja', 16) + ' Abrir mi hoja de informes</a>');
-      hj.href = enl;
-      caja.appendChild(hj);
-    }
     var zR = K.nodo('<section class="kit-tarjeta rp-rango"></section>');
     var zB = K.nodo('<div></div>'), zAt = K.nodo('<div></div>');
     zR.appendChild(zB); zR.appendChild(zAt);
