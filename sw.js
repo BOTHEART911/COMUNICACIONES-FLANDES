@@ -51,6 +51,10 @@ var ARMAZON = [
   './js/informes.js',
   './js/comunicados.js',
   './js/directorio.js',
+  /* ajuste previo F11 */
+  './js/solicitantes.js',
+  './img/solicitud-externa.webp',
+  './kit/compartir.js',
   './img/icono-32.png',
   './img/icono-180.png',
   './img/icono-192.png',

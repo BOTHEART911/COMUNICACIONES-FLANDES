@@ -40,7 +40,7 @@
 
   function preparar(x) {
     x._t = K.norm([x.codigo, x.evento, x.detalles, x.responsable, x.secretaria, x.cargo, x.lugar,
-      (x.asignados || []).join(' '), (x.requerimientos || []).join(' ')].join(' '));
+      (x.asignados || []).join(' '), (x.requerimientos || []).join(' '), x.origen === 'EXTERNO' ? 'externa' : ''].join(' '));
     x._abierta = x.estado !== 'REALIZADA';
     return x;
   }
@@ -175,6 +175,7 @@
     if (!F.quien) return true;
     if (F.quien === 'MIAS') return !!x.mia;
     if (F.quien === 'SIN') return !x.asignados.length;
+    if (F.quien === 'EXTERNAS') return x.origen === 'EXTERNO';
     return x.asignados.some(function (a) { return K.norm(a) === F.quien; });
   }
   function pasaBusca(x) {
@@ -202,7 +203,7 @@
     var caja = K.nodo('<div class="kit-ancho vista ct of cm"></div>');
     C.app.appendChild(caja);
     O().cabecera(caja, 'megafono', 'SOLICITUDES',
-      todas ? 'Todo lo que le piden a Comunicaciones: de los contratistas, de Supervisión y lo que registra el equipo. Toca una para verla, repartirla o cambiarle el estado.'
+      todas ? 'Todo lo que le piden a Comunicaciones: de los contratistas, de Supervisión, de los solicitantes externos y lo que registra el equipo. Toca una para verla, repartirla o cambiarle el estado.'
             : 'Las solicitudes que tienes asignadas. Toca una para verla y marcar en qué va.');
     var acc = K.nodo('<div class="cm-arriba"></div>');
     if (C.puede('crearSolicitud')) {
@@ -251,15 +252,18 @@
       });
       pE.conteos(cE); O().marcar(zE, F.estado);
       if (pQ) {
-        var cQ = { '': 0, MIAS: 0, SIN: 0 }, nombres = {};
+        var cQ = { '': 0, MIAS: 0, SIN: 0, EXTERNAS: 0 }, nombres = {};
         l.filter(function (x) { return pasaEstado(x) && pasaBusca(x); }).forEach(function (x) {
           cQ['']++;
           if (x.mia) cQ.MIAS++;
           if (!x.asignados.length) cQ.SIN++;
+          if (x.origen === 'EXTERNO') cQ.EXTERNAS++;
           x.asignados.forEach(function (a) { var k = K.norm(a); cQ[k] = (cQ[k] || 0) + 1; nombres[k] = a; });
         });
         var ops = [{ valor: '', texto: 'Todo el equipo' }, { valor: 'SIN', texto: 'Sin asignar', tono: 'aviso' }];
         if (cQ.MIAS) ops.splice(1, 0, { valor: 'MIAS', texto: 'Mías' });
+        /* ajuste previo F11: lo que piden los solicitantes externos desde la web */
+        if (cQ.EXTERNAS || F.quien === 'EXTERNAS') ops.push({ valor: 'EXTERNAS', texto: 'Externas' });
         Object.keys(nombres).sort().forEach(function (k) { ops.push({ valor: k, texto: O().nombre(nombres[k]) }); });
         if (F.quien && cQ[F.quien] === undefined) F.quien = '';
         pQ.opciones(ops); pQ.conteos(cQ); O().marcar(zQ, F.quien);
@@ -291,7 +295,8 @@
     var t = K.nodo('<button type="button" class="kit-tarjeta ct-t cm-sol cm-sol--' + tono(x.estado) + (vence !== null && vence < 0 ? ' cm-sol--vencida' : '') + '"></button>');
     var cab = K.nodo('<div class="ct-t__cab"></div>');
     cab.appendChild(K.nodo('<div class="ct-t__quien"><h3 class="ct-t__n">' + K.esc(x.evento || resumen(x.detalles, 70) || 'Sin título') + '</h3>' +
-      '<p class="ct-t__doc">' + K.esc(x.codigo) + ' · ' + K.esc(O().nombre(x.responsable) || '—') + '</p></div>'));
+      '<p class="ct-t__doc">' + K.esc(x.codigo) + ' · ' + K.esc(O().nombre(x.responsable) || '—') +
+      (x.origen === 'EXTERNO' ? ' <span class="cm-externa">' + K.icono('globo', 11) + ' Externa</span>' : '') + '</p></div>'));
     cab.insertAdjacentHTML('beforeend', marcaEstado(x.estado));
     t.appendChild(cab);
     if (x.secretaria) t.appendChild(K.nodo('<p class="cm-sol__sec">' + K.esc(O().titulo(x.secretaria)) + '</p>'));
@@ -374,7 +379,7 @@
         });
         est.appendChild(bt);
       });
-      zAt.appendChild(K.nodo('<p class="campo__ayuda">Cambia el estado con un toque' + (x.idContrato ? ': al contratista le llega un aviso cuando pasa a En proceso y a Realizada.' : '.') + '</p>'));
+      zAt.appendChild(K.nodo('<p class="campo__ayuda">Cambia el estado con un toque' + (x.idContrato ? ': al contratista le llega un aviso cuando pasa a En proceso y a Realizada.' : (x.origen === 'EXTERNO' ? ': al solicitante externo le llega un WhatsApp cuando pasa a En proceso y a Realizada.' : '.')) + '</p>'));
       zAt.appendChild(est);
     }
     if (admin) {
@@ -407,6 +412,7 @@
       accS.appendChild(w); accS.appendChild(ll);
     }
     if (x.idContrato) zS.appendChild(K.nodo('<p class="campo__ayuda">' + K.icono('info', 13) + ' La pidió desde la app CONTRATISTA (contrato ' + K.esc(String(x.idContrato).split('-').pop()) + ').</p>'));
+    if (x.origen === 'EXTERNO') zS.appendChild(K.nodo('<p class="campo__ayuda">' + K.icono('globo', 13) + ' <b>Solicitud externa</b>: la pidió desde la web de solicitudes (' + K.esc(x.idSolicitante || '') + '). Al pasar a En proceso y a Realizada le llega un WhatsApp.</p>'));
     zS.appendChild(accS);
     caja.appendChild(zS);
 
@@ -457,13 +463,18 @@
       poner(r.solicitud);
       var malos = (r.avisos && r.avisos.whatsapp || []).filter(function (w) { return !w.ok; });
       if (malos.length) K.aviso('Guardado, pero el WhatsApp no le llegó a ' + malos.map(function (w) { return O().nombre(w.nombre); }).join(', ') + '.', 'aviso', 8000);
+      /* ajuste previo F11: el WhatsApp individual al solicitante externo */
+      var ex = r.avisos && r.avisos.externo;
+      if (ex && ex.ok === false) K.aviso('Guardado, pero el WhatsApp al solicitante externo no salió' + (ex.error ? ' (' + ex.error + ')' : '') + '. Avísale por otro medio.', 'aviso', 9000);
+      else if (ex && ex.ok) K.aviso('Le avisamos por WhatsApp a ' + O().nombre(ex.nombre) + '.', 'ok', 3500);
       return r.solicitud;
     });
   }
 
   function cambiarEstado(x, e, caja) {
     K.piezas.confirmar.abrir({ titulo: 'Marcar ' + x.codigo + ' como ' + TEXTO_ESTADO[e] + '?',
-      texto: e === 'REALIZADA' && x.idContrato ? 'Al contratista le llega el aviso de que su solicitud quedó lista.' : 'Queda registrado de una vez.',
+      texto: e === 'REALIZADA' && x.idContrato ? 'Al contratista le llega el aviso de que su solicitud quedó lista.'
+        : (x.origen === 'EXTERNO' && e !== 'PENDIENTE' ? 'Al solicitante externo le llega un WhatsApp con el nuevo estado.' : 'Queda registrado de una vez.'),
       si: 'Sí, ' + TEXTO_ESTADO[e].toLowerCase(), no: 'Cancelar' })
       .then(function (ok) {
         if (!ok) return;

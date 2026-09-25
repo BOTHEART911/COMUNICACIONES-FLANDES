@@ -16,6 +16,8 @@
      · SOLICITUDES, detalle y NUEVA (solicitudes.js) · REPARTIR (repartir.js)
      · MIS INFORMES (informes.js) · COMUNICADOS (comunicados.js)
      · DIRECTORIO (directorio.js) · SOPORTE (tarjeta y menú del perfil)
+     · SOLICITANTES EXTERNOS (solicitantes.js, solo ADMIN y DEV): quienes
+       piden desde la web SOLICITUD-PRENSA-FLANDES sin ser contratistas
 
    UN SOLO LLAMADO por pantalla o acción:
      · Entrar: el login trae el arranque ('inicio') en el mismo viaje, y
@@ -41,7 +43,7 @@
   var YO = null;          /* quién entró */
   var ARRANQUE = null;    /* lo que trajo 'inicio' */
 
-  var MODULOS = ['SOLIS', 'REPARTIR', 'INFORMES', 'COMUS', 'DIRECTORIO'];
+  var MODULOS = ['SOLIS', 'REPARTIR', 'INFORMES', 'COMUS', 'DIRECTORIO', 'SOLICITANTES'];
 
   /* ══════════════ el arranque, en UNA sola llamada ══════════════ */
 
@@ -216,7 +218,8 @@
     repartir: function () { window.REPARTIR.vista(); },
     informes: function () { window.INFORMES.vista(); },
     comunicados: function () { window.COMUS.vista(); },
-    directorio: function () { window.DIRECTORIO.vista(); }
+    directorio: function () { window.DIRECTORIO.vista(); },
+    solicitantes: function () { window.SOLICITANTES.vista(); }
   };
 
   var titulos = {
@@ -227,11 +230,13 @@
     repartir: 'REPARTIR',
     informes: 'MIS INFORMES',
     comunicados: 'COMUNICADOS',
-    directorio: 'DIRECTORIO'
+    directorio: 'DIRECTORIO',
+    solicitantes: 'SOLICITANTES EXTERNOS'
   };
 
   var PERMISO = { solicitudes: 'solicitudes', solicitud: 'solicitudes', nueva: 'crearSolicitud', repartir: 'repartir',
-                  informes: 'misInformes', comunicados: 'comunicados', directorio: 'directorio' };
+                  informes: 'misInformes', comunicados: 'comunicados', directorio: 'directorio',
+                  solicitantes: 'solicitantes' };
 
   function irA(v) { location.hash = '#/' + v; }
 
@@ -313,6 +318,9 @@
       function () { irA('repartir'); }));
     if (puede('crearSolicitud')) tS.push(accesoIcono('NUEVA SOLICITUD', 'Registra lo que te pidieron por llamada, WhatsApp o en persona', 'mas',
       function () { irA('nueva'); }));
+    /* ajuste previo F11: la imagen es el escudo SOLICITUD EXTERNA · PRENSA que entregó Oss (25/09) */
+    if (puede('solicitantes')) tS.push(acceso('SOLICITANTES EXTERNOS', 'Quienes piden sin ser contratistas: regístralos y mándales el enlace por WhatsApp',
+      'img/solicitud-externa.webp', function () { irA('solicitantes'); }, true));
     if (tS.length) bloque('SOLICITUDES', tS);
 
     var tE = [];
@@ -423,10 +431,11 @@
     destino.appendChild(s);
   }
 
-  function acceso(titulo, texto, medio, al) {
+  /** propio = la imagen vive en el repo de la app, no en ALCALDIA-MEDIOS. */
+  function acceso(titulo, texto, medio, al, propio) {
     var b = K.nodo(
       '<button type="button" class="kit-tarjeta acceso">' +
-      '  <img class="acceso__img" src="' + K.esc(K.medio(medio)) + '" alt="" loading="lazy">' +
+      '  <img class="acceso__img" src="' + K.esc(propio ? medio : K.medio(medio)) + '" alt="" loading="lazy">' +
       '  <span class="acceso__txt">' +
       '    <span class="acceso__t">' + K.esc(titulo) + '</span>' +
       '    <span class="acceso__p">' + K.esc(texto) + '</span>' +

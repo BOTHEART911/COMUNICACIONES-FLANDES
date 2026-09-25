@@ -2876,3 +2876,41 @@
   .cm-persona { transition: none; }
 }
 .cm-ficha__entrega.cm-sol__entrega--tarde { color: var(--k-malo); }
+
+/* ============================================================
+   AJUSTE PREVIO A LA FASE 11 · SOLICITANTES EXTERNOS (25/09/2026)
+   ============================================================ */
+.cm-externa {
+  display: inline-flex; align-items: center; gap: 3px; margin-left: 4px; padding: 1px 7px;
+  border-radius: var(--k-r-pill); font-size: .68rem; font-weight: 700; letter-spacing: .02em;
+  background: rgba(var(--k-marca-rgb), .12); color: var(--k-marca); vertical-align: 1px;
+}
+:root[data-tema="oscuro"] .cm-externa { background: rgba(var(--k-marca-rgb), .28); color: var(--k-marca-clara); }
+.cm-externa svg { width: 11px; height: 11px; }
+
+.sx-lista { align-items: start; }
+.sx-t { display: flex; flex-direction: column; gap: 10px; border-left: 4px solid var(--k-ok); }
+.sx-t--off { border-left-color: var(--k-apagado); opacity: .82; }
+.sx-t__cab { display: flex; align-items: center; gap: 10px; }
+.sx-t__quien { flex: 1; min-width: 0; }
+.sx-t__n { margin: 0; font-family: var(--k-fuente-titulo); font-size: .98rem; line-height: 1.25; overflow-wrap: anywhere; }
+.sx-t__dep { margin: 2px 0 0; font-size: .8rem; color: var(--k-tinta-2); overflow-wrap: anywhere; }
+.sx-t__estado { flex: none; font-size: .7rem; font-weight: 700; padding: 3px 9px; }
+.sx-t__estado--ok { background: var(--k-ok-fondo); color: var(--k-ok); border-color: transparent; }
+.sx-t__estado--off { background: var(--k-papel-2); color: var(--k-tinta-2); }
+.sx-t__datos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0; }
+.sx-t__datos div { background: var(--k-papel-2); border-radius: var(--k-r-sm); padding: 7px 9px; min-width: 0; }
+.sx-t__datos dt { display: flex; align-items: center; gap: 4px; font-size: .68rem; color: var(--k-tinta-2); text-transform: uppercase; letter-spacing: .03em; }
+.sx-t__datos dt svg { width: 13px; height: 13px; }
+.sx-t__datos dd { margin: 3px 0 0; font-weight: 600; font-size: .84rem; overflow-wrap: anywhere; }
+.sx-t__datos dd small { font-weight: 400; color: var(--k-tinta-2); }
+.sx-t__pie { margin: 0; font-size: .72rem; color: var(--k-tinta-2); }
+.sx-t__acc { display: flex; flex-wrap: wrap; gap: 6px; }
+.sx-t__acc .kit-btn { padding: 8px 12px; font-size: .82rem; }
+.sx-wa { flex: 1 1 100%; justify-content: center; }
+.sx-envio p { margin: 0 0 10px; }
+.sx-envio__msg {
+  margin: 0; white-space: pre-wrap; word-break: break-word; font-family: var(--k-fuente); font-size: .82rem;
+  background: var(--k-papel-2); border-radius: var(--k-r-md); padding: 12px; max-height: 42vh; overflow: auto;
+}
+@media (max-width: 420px) { .sx-t__datos { grid-template-columns: 1fr 1fr; } }

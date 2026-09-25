@@ -198,11 +198,31 @@
             } }
         ]
       };
+    },
+
+    /* ajuste previo F11 */
+    solicitantes: function () {
+      function datos() { var d = window.SOLICITANTES && window.SOLICITANTES._datos(); return (d && d.lista) || []; }
+      return {
+        guia: 'Personas que no son contratistas ni supervisores y le piden apoyo a Comunicaciones. Regístralas con su **WhatsApp** y mándales el **enlace**: al abrirlo entran de una vez a la web, piden con ' +
+              (((window.SOLICITANTES && window.SOLICITANTES._datos()) || {}).antelacion || 3) + ' días de antelación y ven en qué va cada solicitud. ' +
+              'Lo que piden llega a **Solicitudes** marcado **Externa**; al pasar a En proceso y a Realizada les llega un WhatsApp. **Inactivar** les quita el acceso.',
+        botones: [
+          { texto: '¿Quiénes nunca han entrado?', responde: function () {
+              var l = datos().filter(function (s) { return s.estado === 'ACTIVO' && !s.ultimoIngreso; });
+              return l.length ? 'Registrados que todavía no abren la web (quizá no les llegó el enlace):\n' + listaCorta(l, function (s) { return '· **' + s.nombre + '** — ' + s.dependencia; }, 10) : 'Todos los activos ya entraron al menos una vez. ✓';
+            } },
+          { texto: '¿Quién pide más?', responde: function () {
+              var l = datos().filter(function (s) { return s.solicitudes; }).sort(function (a, b) { return b.solicitudes - a.solicitudes; });
+              return l.length ? listaCorta(l, function (s) { return '· **' + s.nombre + '**: ' + s.solicitudes + (s.abiertas ? ' (' + s.abiertas + ' abiertas)' : ''); }, 8) : 'Todavía nadie ha pedido desde la web.';
+            } }
+        ]
+      };
     }
   };
 
   var TITULOS = { inicio: 'Tu inicio', solicitudes: 'Solicitudes', solicitud: 'La solicitud', nueva: 'Nueva solicitud', repartir: 'Repartir',
-                  informes: 'Mis informes', comunicados: 'Comunicados', directorio: 'Directorio' };
+                  informes: 'Mis informes', comunicados: 'Comunicados', directorio: 'Directorio', solicitantes: 'Solicitantes externos' };
 
   function montar(vista, extra) {
     if (!K.piezas.insights) return;
