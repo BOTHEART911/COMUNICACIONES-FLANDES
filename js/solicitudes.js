@@ -206,6 +206,25 @@
       todas ? 'Todo lo que le piden a Comunicaciones: de los contratistas, de Supervisión, de los solicitantes externos y lo que registra el equipo. Toca una para verla, repartirla o cambiarle el estado.'
             : 'Las solicitudes que tienes asignadas. Toca una para verla y marcar en qué va.');
     var acc = K.nodo('<div class="cm-arriba"></div>');
+    /* 26/09: Lista ⇄ Calendario, para cualquier usuario. Los mismos datos y filtros; cero viajes. */
+    var modo = leerModo();
+    var sw = K.nodo('<div class="cm-modo" role="group" aria-label="Cómo ver las solicitudes">' +
+      '<button type="button" data-modo="lista">' + ICO.lista + ' Lista</button>' +
+      '<button type="button" data-modo="cal">' + ICO.cal + ' Calendario</button></div>');
+    function marcarModo() {
+      [].forEach.call(sw.children, function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-modo') === modo)); });
+      caja.classList.toggle('cm--cal', modo === 'cal');
+    }
+    [].forEach.call(sw.children, function (b) {
+      b.addEventListener('click', function () {
+        var m = b.getAttribute('data-modo');
+        if (m === modo) return;
+        K.vibrar(6);
+        modo = m; guardarModo(m); marcarModo(); pintar();
+      });
+    });
+    acc.appendChild(sw);
+    marcarModo();
     if (C.puede('crearSolicitud')) {
       var nueva = K.nodo('<button type="button" class="kit-btn kit-btn--marca">' + K.icono('mas', 16) + ' Nueva solicitud</button>');
       nueva.addEventListener('click', function () { C.irA('nueva'); });
@@ -223,11 +242,19 @@
     caja.appendChild(lista);
     var mas = K.nodo('<button type="button" class="kit-btn kit-btn--plano ct-mas" hidden>Ver más</button>');
     caja.appendChild(mas);
+    var cal = K.nodo('<div class="cm-cal-zona" hidden></div>');
+    caja.appendChild(cal);
     var VER = 40, pE, pQ;
     mas.addEventListener('click', function () { VER += 60; pintarLista(); });
 
     function pintarLista() {
       var f = filas();
+      if (modo === 'cal') {
+        lista.hidden = true; mas.hidden = true; cal.hidden = false;
+        calendario(cal, f, function () { pintar(); });
+        return;
+      }
+      lista.hidden = false; cal.hidden = true; cal.innerHTML = '';
       lista.innerHTML = '';
       mas.hidden = true;
       if (!f.length) {
@@ -315,6 +342,172 @@
     t.appendChild(pie);
     t.addEventListener('click', function () { K.vibrar(6); C.irA('solicitud/' + encodeURIComponent(x.codigo)); });
     return t;
+  }
+
+  /* ══════════════ EL CALENDARIO (26/09) ══════════════
+     Mes a mes. Cada solicitud cae en su fecha de PUBLICACIÓN (la de
+     entrega: es obligatoria). En cada día, UN círculo por persona
+     asignada (foto o iniciales) con un numerito si esa persona tiene
+     varias ese día; más de 3 personas → "+N". Las que no tienen a nadie
+     salen en un círculo propio "Sin asignar". Tocar un círculo abre las
+     solicitudes de esa persona ese día; "+N", las del día completo.
+     Usa las mismas filas filtradas de la lista: no viaja al servidor. */
+
+  var MODO_K = 'solicitudes.modo.v1';
+  var MES = null;              /* 'YYYY-MM' que se está viendo (sobrevive al ir y volver del detalle) */
+  var SIN = '__SIN__';
+  var MAX_CARAS = 3;
+  var MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+  var DIAS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+  var SVG = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">';
+  var ICO = {
+    lista: SVG + '<path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r=".6"/><circle cx="4.5" cy="12" r=".6"/><circle cx="4.5" cy="18" r=".6"/></svg>',
+    cal: SVG + '<rect x="3.5" y="5" width="17" height="15.5" rx="2.4"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 17.3h.01M12 17.3h.01"/></svg>'
+  };
+
+  function leerModo() { return K.guardar.leer(MODO_K, 'lista') === 'cal' ? 'cal' : 'lista'; }
+  function guardarModo(m) { K.guardar.escribir(MODO_K, m); }
+
+  function mesDe(iso) { return String(iso || '').slice(0, 7); }
+  function moverMes(ym, n) {
+    var y = +ym.slice(0, 4), m = +ym.slice(5, 7) - 1 + n;
+    y += Math.floor(m / 12); m = ((m % 12) + 12) % 12;
+    return y + '-' + ('0' + (m + 1)).slice(-2);
+  }
+  function nombreMes(ym) { var m = MESES[+ym.slice(5, 7) - 1]; return m.charAt(0).toUpperCase() + m.slice(1) + ' de ' + ym.slice(0, 4); }
+  function diaLargo(iso) { var d = aDate(iso); return d ? d.getDate() + ' de ' + MESES[d.getMonth()] + ' de ' + d.getFullYear() : iso; }
+
+  /** { 'YYYY-MM-DD': { personas: {clave: {nombre, lista:[]}}, orden: [claves], total } } del mes. */
+  function porDia(f, ym) {
+    var dias = {};
+    f.forEach(function (x) {
+      if (!x.publicacion || mesDe(x.publicacion) !== ym) return;
+      var iso = String(x.publicacion).slice(0, 10);
+      var d = dias[iso] || (dias[iso] = { personas: {}, orden: [], total: 0 });
+      d.total++;
+      var quienes = x.asignados.length ? x.asignados : [SIN];
+      var vistos = {};
+      quienes.forEach(function (n) {
+        var k = n === SIN ? SIN : K.norm(n);
+        if (vistos[k]) return;
+        vistos[k] = 1;
+        var p = d.personas[k] || (d.personas[k] = { clave: k, nombre: n, lista: [] });
+        p.lista.push(x);
+      });
+    });
+    Object.keys(dias).forEach(function (iso) {
+      var d = dias[iso];
+      /* más solicitudes primero; "Sin asignar" al final; luego por nombre */
+      d.orden = Object.keys(d.personas).sort(function (a, b) {
+        if ((a === SIN) !== (b === SIN)) return a === SIN ? 1 : -1;
+        return d.personas[b].lista.length - d.personas[a].lista.length || a.localeCompare(b);
+      });
+    });
+    return dias;
+  }
+
+  function circulo(p, iso) {
+    var n = p.lista.length;
+    var quien = p.clave === SIN ? 'Sin asignar' : O().nombre(p.nombre);
+    var b = K.nodo('<button type="button" class="cm-cal__p' + (p.clave === SIN ? ' cm-cal__p--sin' : '') + '"></button>');
+    b.setAttribute('aria-label', quien + ': ' + n + (n === 1 ? ' solicitud' : ' solicitudes') + ' el ' + diaLargo(iso));
+    b.title = quien + (n > 1 ? ' · ' + n : '');
+    if (p.clave === SIN) b.appendChild(K.nodo('<span class="kit-av cm-cal__sin" aria-hidden="true">' + K.icono('persona', 14) + '</span>'));
+    else if (K.piezas.personas) b.appendChild(K.piezas.personas.avatar(p.nombre, { tam: 28, sinZoom: true }));
+    if (p.lista.some(function (x) { return x._abierta && x.publicacion < hoyIso(); })) b.classList.add('cm-cal__p--tarde');
+    if (n > 1) b.appendChild(K.nodo('<i class="cm-cal__n" aria-hidden="true">' + n + '</i>'));
+    b.addEventListener('click', function (e) { e.stopPropagation(); K.vibrar(6); abrirDia(iso, [p], quien); });
+    return b;
+  }
+
+  /** La hoja con las solicitudes de una persona (o de todas) ese día. */
+  function abrirDia(iso, personas, titulo) {
+    var cuerpo = K.nodo('<div class="cm-cal__hoja"></div>');
+    var m = null;
+    var vistas = {};
+    personas.forEach(function (p) {
+      if (personas.length > 1) {
+        var cab = K.nodo('<div class="cm-cal__quien"></div>');
+        if (p.clave === SIN) cab.appendChild(K.nodo('<span class="kit-av cm-cal__sin" aria-hidden="true">' + K.icono('persona', 14) + '</span>'));
+        else if (K.piezas.personas) cab.appendChild(K.piezas.personas.avatar(p.nombre, { tam: 28, sinZoom: true }));
+        cab.appendChild(K.nodo('<b>' + K.esc(p.clave === SIN ? 'Sin asignar' : O().nombre(p.nombre)) + '</b>'));
+        cab.appendChild(K.nodo('<small>' + p.lista.length + '</small>'));
+        cuerpo.appendChild(cab);
+      }
+      var l = K.nodo('<div class="kit-rejilla cm-cal__l"></div>');
+      p.lista.forEach(function (x) {
+        var t = tarjeta(x);
+        if (personas.length > 1 && vistas[x.codigo]) t.classList.add('cm-cal__rep');   /* compartida: ya salió arriba */
+        vistas[x.codigo] = 1;
+        t.addEventListener('click', function () { if (m) m.cerrar(); });
+        l.appendChild(t);
+      });
+      cuerpo.appendChild(l);
+    });
+    m = O().modal({ titulo: titulo + ' · ' + diaLargo(iso), cuerpo: cuerpo, ancha: true,
+      botones: [{ texto: 'Cerrar', al: function () { m.cerrar(); } }] });
+  }
+
+  function calendario(zona, f, repintar) {
+    var hoy = hoyIso();
+    if (!MES) MES = mesDe(hoy);
+    var ym = MES;
+    var dias = porDia(f, ym);
+    var enMes = 0;
+    Object.keys(dias).forEach(function (k) { enMes += dias[k].total; });
+    var sinFecha = f.filter(function (x) { return !x.publicacion; }).length;
+
+    zona.innerHTML = '';
+    var t = K.nodo('<section class="kit-tarjeta cm-cal"></section>');
+    var cab = K.nodo('<div class="cm-cal__cab">' +
+      '<button type="button" class="kit-btn kit-btn--plano cm-cal__ir" data-ir="-1" aria-label="Mes anterior">' + K.icono('atras', 18) + '</button>' +
+      '<div class="cm-cal__mes"><h3>' + K.esc(nombreMes(ym)) + '</h3><small>' + K.numero(enMes) + (enMes === 1 ? ' solicitud' : ' solicitudes') + ' por fecha de publicación</small></div>' +
+      '<button type="button" class="kit-btn kit-btn--plano cm-cal__ir" data-ir="1" aria-label="Mes siguiente">' + K.icono('adelante', 18) + '</button></div>');
+    [].forEach.call(cab.querySelectorAll('[data-ir]'), function (b) {
+      b.addEventListener('click', function () { MES = moverMes(MES, +b.getAttribute('data-ir')); repintar(); });
+    });
+    if (ym !== mesDe(hoy)) {
+      var hoyB = K.nodo('<button type="button" class="kit-btn kit-btn--plano cm-cal__hoy">Hoy</button>');
+      hoyB.addEventListener('click', function () { MES = mesDe(hoy); repintar(); });
+      cab.appendChild(hoyB);
+    }
+    t.appendChild(cab);
+
+    var rej = K.nodo('<div class="cm-cal__rej" role="grid" aria-label="' + K.esc(nombreMes(ym)) + '"></div>');
+    DIAS.forEach(function (d) { rej.appendChild(K.nodo('<div class="cm-cal__dsem" role="columnheader">' + d + '</div>')); });
+    var y = +ym.slice(0, 4), mm = +ym.slice(5, 7) - 1;
+    var primero = new Date(y, mm, 1), ultimo = new Date(y, mm + 1, 0).getDate();
+    var hueco = (primero.getDay() + 6) % 7;             /* lunes primero */
+    for (var i = 0; i < hueco; i++) rej.appendChild(K.nodo('<div class="cm-cal__d cm-cal__d--fuera" aria-hidden="true"></div>'));
+    for (var dia = 1; dia <= ultimo; dia++) {
+      var iso = ym + '-' + ('0' + dia).slice(-2);
+      var d = dias[iso];
+      var c = K.nodo('<div class="cm-cal__d' + (iso === hoy ? ' cm-cal__d--hoy' : '') + (d ? ' cm-cal__d--con' : '') +
+        ((primero.getDay() + dia - 1) % 7 === 0 ? ' cm-cal__d--dom' : '') + '" role="gridcell"><b class="cm-cal__num">' + dia + '</b></div>');
+      if (d) {
+        var caras = K.nodo('<div class="cm-cal__caras"></div>');
+        var sobran = d.orden.length > MAX_CARAS ? d.orden.length - MAX_CARAS : 0;
+        var visibles = d.orden.slice(0, MAX_CARAS);
+        visibles.forEach(function (k) { caras.appendChild(circulo(d.personas[k], iso)); });
+        if (sobran) {
+          (function (d, iso, sobran) {
+            var mas = K.nodo('<button type="button" class="cm-cal__p cm-cal__mas">+' + sobran + '</button>');
+            mas.setAttribute('aria-label', d.orden.length + ' personas el ' + diaLargo(iso) + '. Ver todas');
+            mas.addEventListener('click', function (e) {
+              e.stopPropagation(); K.vibrar(6);
+              abrirDia(iso, d.orden.map(function (k) { return d.personas[k]; }), 'Todo el día');
+            });
+            caras.appendChild(mas);
+          }(d, iso, sobran));
+        }
+        c.appendChild(caras);
+      }
+      rej.appendChild(c);
+    }
+    t.appendChild(rej);
+    if (sinFecha) t.appendChild(K.nodo('<p class="campo__ayuda cm-cal__nota">' + K.icono('info', 13) + ' ' + K.numero(sinFecha) +
+      (sinFecha === 1 ? ' solicitud no tiene' : ' solicitudes no tienen') + ' fecha de publicación y no salen en el calendario.</p>'));
+    zona.appendChild(t);
   }
 
   /* ══════════════ EL DETALLE ══════════════ */

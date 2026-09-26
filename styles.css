@@ -2813,6 +2813,85 @@
 
 /* el detalle */
 .cm-det { display: flex; flex-direction: column; gap: 12px; }
+
+/* 26/09 · Lista ⇄ Calendario en SOLICITUDES */
+.cm-modo { display: inline-flex; padding: 3px; gap: 2px; border-radius: var(--k-r-pill); background: var(--k-papel-2); border: 1px solid var(--k-linea); margin-right: auto; }
+.cm-modo button {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 38px; padding: 0 14px; border: 0; border-radius: var(--k-r-pill);
+  background: transparent; color: var(--k-tinta-2); font: 600 .82rem/1 var(--k-fuente); cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.cm-modo button[aria-pressed="true"] { background: var(--k-marca); color: #fff; box-shadow: 0 1px 4px rgba(var(--k-marca-rgb), .3); }
+:root[data-tema="oscuro"] .cm-modo button[aria-pressed="true"] { background: var(--k-marca-clara); }
+.cm-modo button:focus-visible { outline: 2px solid var(--k-marca); outline-offset: 2px; }
+.cm-cal-zona[hidden], .cm-lista[hidden] { display: none; }
+
+.cm-cal { padding: 12px; }
+.cm-cal__cab { display: grid; grid-template-columns: 40px minmax(0, 1fr) 40px; align-items: center; gap: 6px 8px; margin-bottom: 10px; }
+.cm-cal__ir { width: 40px; height: 40px; padding: 0; justify-content: center; border-radius: 50%; flex: 0 0 auto; }
+.cm-cal__mes { flex: 1 1 auto; min-width: 0; text-align: center; display: flex; flex-direction: column; gap: 2px; }
+.cm-cal__mes h3 { margin: 0; font: 700 1.05rem/1.2 var(--k-fuente-titulo); color: var(--k-tinta); }
+.cm-cal__mes small { font: 500 .72rem/1.2 var(--k-fuente); color: var(--k-apagado); }
+.cm-cal__hoy { grid-column: 1 / -1; justify-self: center; min-height: 32px; padding: 0 16px; }
+.cm-cal__rej { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.cm-cal__dsem { text-align: center; padding: 2px 0 4px; font: 700 .66rem/1 var(--k-fuente); color: var(--k-apagado); text-transform: uppercase; letter-spacing: .3px; }
+.cm-cal__d {
+  min-height: 74px; padding: 4px 3px; border-radius: var(--k-r-sm); background: var(--k-papel-2); border: 1px solid transparent;
+  display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 0;
+}
+.cm-cal__d--fuera { background: transparent; }
+.cm-cal__d--con { background: var(--k-papel); border-color: var(--k-linea); }
+.cm-cal__d--hoy { border-color: var(--k-marca); box-shadow: inset 0 0 0 1px var(--k-marca); }
+:root[data-tema="oscuro"] .cm-cal__d--hoy { border-color: var(--k-marca-clara); box-shadow: inset 0 0 0 1px var(--k-marca-clara); }
+.cm-cal__num { font: 700 .74rem/1 var(--k-fuente); color: var(--k-tinta-2); }
+.cm-cal__d--dom .cm-cal__num { color: var(--k-apagado); }
+.cm-cal__d--hoy .cm-cal__num { color: #fff; background: var(--k-marca); border-radius: var(--k-r-pill); padding: 3px 6px; }
+:root[data-tema="oscuro"] .cm-cal__d--hoy .cm-cal__num { background: var(--k-marca-clara); }
+.cm-cal__caras { display: grid; grid-template-columns: repeat(2, auto); gap: 4px; justify-content: center; }
+.cm-cal__p {
+  position: relative; width: 28px; height: 28px; padding: 0; border: 0; border-radius: 50%; background: none; cursor: pointer;
+  display: grid; place-items: center; -webkit-tap-highlight-color: transparent; transition: transform .12s ease;
+}
+.cm-cal__p:active { transform: scale(.92); }
+.cm-cal__p:focus-visible { outline: 2px solid var(--k-marca); outline-offset: 2px; }
+.cm-cal__p .kit-av { --kit-av-tam: 28px !important; }
+.cm-cal__p--tarde .kit-av { box-shadow: 0 0 0 2px var(--k-malo); }
+.cm-cal__sin { background: var(--k-aviso-fondo); color: var(--k-aviso); --kit-av-tam: 28px; }
+.cm-cal__n {
+  position: absolute; top: -5px; right: -6px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: var(--k-r-pill);
+  background: var(--k-marca); color: #fff; font: 700 .62rem/16px var(--k-fuente); font-style: normal; text-align: center;
+  box-shadow: 0 0 0 2px var(--k-papel);
+}
+:root[data-tema="oscuro"] .cm-cal__n { background: var(--k-marca-clara); }
+.cm-cal__mas { background: var(--k-papel-2); border: 1px solid var(--k-linea); color: var(--k-tinta-2); font: 700 .7rem/1 var(--k-fuente); }
+.cm-cal__nota { margin: 10px 2px 0; }
+.cm-cal__hoja { display: flex; flex-direction: column; gap: 10px; }
+.cm-cal__quien { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+.cm-cal__quien b { font: 700 .88rem/1.2 var(--k-fuente); color: var(--k-tinta); }
+.cm-cal__quien small { margin-left: auto; font: 700 .72rem/1 var(--k-fuente); color: var(--k-apagado); background: var(--k-papel-2); padding: 4px 8px; border-radius: var(--k-r-pill); }
+.cm-cal__l { gap: 10px; }
+.cm-cal__rep { opacity: .7; }
+@media (max-width: 420px) {
+  /* en el teléfono las caras van en columna: cada una con su numerito al lado, sin taparse */
+  .cm-cal { padding: 8px 6px; }
+  .cm-cal__rej { gap: 3px; }
+  .cm-cal__d { min-height: 64px; padding: 4px 1px 6px; }
+  .cm-cal__caras { grid-template-columns: 1fr; gap: 4px; justify-items: center; margin-top: 1px; }
+  .cm-cal__p, .cm-cal__sin { width: 22px; height: 22px; }
+  .cm-cal__p .kit-av, .cm-cal__sin { --kit-av-tam: 22px !important; }
+  .cm-cal__sin svg { width: 12px; height: 12px; }
+  .cm-cal__mas { font-size: .62rem; }
+  .cm-cal__n { top: -4px; right: -9px; min-width: 13px; height: 13px; font-size: .55rem; line-height: 13px; padding: 0 3px; box-shadow: 0 0 0 1.5px var(--k-papel); }
+  .cm-modo button { padding: 0 11px; }
+}
+@media (min-width: 900px) {
+  .cm-cal { padding: 16px; }
+  .cm-cal__d { min-height: 104px; align-items: flex-start; padding: 6px; }
+  .cm-cal__caras { grid-template-columns: repeat(4, auto); justify-content: flex-start; margin-top: 4px; gap: 6px; }
+  .cm-cal__p { width: 34px; height: 34px; }
+  .cm-cal__p .kit-av, .cm-cal__sin { --kit-av-tam: 34px !important; }
+  .cm-cal__num { font-size: .82rem; }
+}
+@media (prefers-reduced-motion: reduce) { .cm-cal__p { transition: none; } }
 .cm-ficha { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
 .cm-ficha__cab { display: flex; gap: 12px; align-items: flex-start; justify-content: space-between; }
 .cm-ficha__cod { margin: 0 0 4px; font: 600 .74rem/1.2 var(--k-fuente); color: var(--k-apagado); }
