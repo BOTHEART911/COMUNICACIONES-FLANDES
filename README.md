@@ -1,13 +1,23 @@
-# COMUNICACIONES-FLANDES
+<div align="center">
 
-App del equipo de Comunicaciones de la Alcaldía de Flandes (antes PRENSA). Front estático (GitHub Pages) sobre FLANDES_CORE (app `COMUNICACIONES`). Mismo kit, estilos, cielo, cohete, esqueletos, Insights, foto de perfil, modo oscuro, login compacto y firma que las otras apps.
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".github/firma/banner-oscuro.svg">
+  <source media="(prefers-color-scheme: light)" srcset=".github/firma/banner-claro.svg">
+  <img src=".github/firma/banner-claro.svg" alt="Oscar Polania · Experto en soluciones digitales" width="100%">
+</picture>
 
-Roles: **ADMIN** (ve todas, reparte, edita, manda al grupo y corrige el directorio) y **COMUNICADOR** (ve las que tiene asignadas y les cambia el estado). El DEV entra a todo.
+<br><br>
 
-## Fase 9 · qué hay aquí
-- **Inicio**: el login trae el arranque y dentro la lista entera de solicitudes (un solo viaje). Burbujas, resumen tocable (pendientes, en proceso, entrega vencida, sin asignar, realizadas) y las próximas entregas. Comunicados y directorio se piden en segundo plano.
-- **Solicitudes** (`js/solicitudes.js`): pastillas de estado y de persona, búsqueda, las abiertas por fecha de entrega. **Detalle**: estado con un toque, repartir (WhatsApp a quien se agrega), editar, enviar al grupo, copiar, WhatsApp y llamada a quien la pide. **Nueva solicitud** desde la app.
-- **Repartir** (`js/repartir.js`, solo ADMIN): la carga de cada persona y lo que está sin asignar, asignado en la misma tarjeta.
-- **Mis informes** (`js/informes.js`): por periodo (fecha de entrega o de ingreso), estado y persona; PDF por bloques y Excel. (10.1: se quitó "Abrir mi hoja de informes", el enlace a la hoja PRENSA de la app vieja.)
-- **Comunicados** (`js/comunicados.js`) y **Directorio** (`js/directorio.js`, el ADMIN agrega y corrige).
-- Soporte en la tarjeta del inicio y en el menú del perfil. Insights en todas las vistas.
+<a href="https://wa.me/573103230712?text=Hola%20Oscar%2C%20vi%20tu%20trabajo%20en%20GitHub%20y%20me%20gustar%C3%ADa%20hablar%20contigo%20sobre%20una%20soluci%C3%B3n%20digital."><img src=".github/firma/whatsapp.svg" alt="Escríbeme por WhatsApp" height="56"></a>
+&nbsp;&nbsp;
+<a href="mailto:opolania11@gmail.com?subject=Contacto%20desde%20GitHub"><img src=".github/firma/correo.svg" alt="Escríbeme un correo" height="56"></a>
+
+<br><br>
+
+<a href="https://youtu.be/Bo3RiaxJNtw" title="Ver el video en YouTube"><img src=".github/firma/video.svg" alt="Ver el video en YouTube" width="720"></a>
+
+<br><br>
+
+<sub>© Oscar Polania · Experto en soluciones digitales</sub>
+
+</div>
