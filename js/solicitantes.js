@@ -115,7 +115,7 @@
     var activo = s.estado === 'ACTIVO';
     var t = K.nodo('<article role="listitem" class="kit-tarjeta sx-t' + (activo ? '' : ' sx-t--off') + '"></article>');
     var cab = K.nodo('<div class="sx-t__cab"></div>');
-    if (K.piezas.personas) cab.appendChild(K.piezas.personas.avatar(s.nombre, { tam: 44, sinZoom: true }));
+    if (K.piezas.personas) cab.appendChild(K.piezas.personas.avatar(s.nombre, { tam: 44 }));
     cab.appendChild(K.nodo('<div class="sx-t__quien"><h3 class="sx-t__n">' + K.esc(O().nombre(s.nombre)) + '</h3>' +
       '<p class="sx-t__dep">' + K.esc(O().titulo(s.cargo)) + ' · ' + K.esc(O().titulo(s.dependencia)) + '</p></div>'));
     cab.insertAdjacentHTML('beforeend', '<span class="kit-pastilla sx-t__estado sx-t__estado--' + (activo ? 'ok' : 'off') + '">' + (activo ? 'Activo' : 'Inactivo') + '</span>');

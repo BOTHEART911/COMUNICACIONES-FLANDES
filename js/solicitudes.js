@@ -142,7 +142,7 @@
   function caras(nombres, tam) {
     var z = K.nodo('<span class="cm-caras"></span>');
     (nombres || []).forEach(function (n) {
-      if (K.piezas.personas) z.appendChild(K.piezas.personas.avatar(n, { tam: tam || 26, sinZoom: true }));
+      if (K.piezas.personas) z.appendChild(K.piezas.personas.avatar(n, { tam: tam || 26 }));   /* 28/09: con foto, se abre en grande */
     });
     return z;
   }
