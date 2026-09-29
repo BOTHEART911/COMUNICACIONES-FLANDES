@@ -88,7 +88,11 @@
       return arranque(false, { arranque: d, refresco: true });
     }).then(function () {
       var v = String(location.hash || '').replace(/^#\/?/, '').split('/')[0] || 'inicio';
-      if (v === 'inicio') enrutar();
+      /* 29/09 · tambien las listas: si la persona ya entro a SOLICITUDES o a
+         REPARTIR mientras llegaba lo nuevo, se vuelven a pintar con lo de ahora
+         (antes se quedaba viendo lo de la ultima vez que abrio la app). */
+      var abierto = K.piezas.guardado && K.piezas.guardado.abierto && K.piezas.guardado.abierto();
+      if (!abierto && (v === 'inicio' || v === 'solicitudes' || v === 'repartir')) enrutar();
     }, function (e) {
       var m = String((e && e.message) || '');
       if (/SESION|SIN_SESION/.test((e && e.codigo) || '') || (/sesi[oó]n/i.test(m) && /(venci|no valida|no válida|inicia)/i.test(m))) {
