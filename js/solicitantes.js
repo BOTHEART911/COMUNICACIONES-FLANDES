@@ -57,9 +57,14 @@
   function vista() {
     var c = K.nodo('<div class="kit-ancho vista ct of cm sx"></div>');
     C.app.appendChild(c);
-    K.piezas.esqueletos.mientras(c, cargar(false), { forma: 'filas', cuantos: 5, espera: 'Trayendo los solicitantes' })
+    /* 30/09 · la cabecera primero; la lista llega detrás */
+    O().cabecera(c, 'persona', 'SOLICITANTES EXTERNOS',
+      'Personas que no son contratistas ni supervisores y le piden apoyo a Comunicaciones. Regístralas y mándales el enlace por WhatsApp.');
+    var zona = K.nodo('<div></div>');
+    c.appendChild(zona);
+    K.piezas.esqueletos.mientras(zona, cargar(false), { forma: 'filas', cuantos: 5, espera: 'Trayendo los solicitantes' })
       .then(function () { pintar(c); })
-      ['catch'](function (e) { c.appendChild(C.errorCaja(e, function () { D = null; C.app.innerHTML = ''; vista(); })); });
+      ['catch'](function (e) { zona.appendChild(C.errorCaja(e, function () { D = null; C.app.innerHTML = ''; vista(); })); });
   }
 
   function pintar(c) {

@@ -33,9 +33,14 @@
     var c = K.nodo('<div class="kit-ancho vista ct of ins cm"></div>');
     C.app.appendChild(c);
     var p = cargar(false);
-    K.piezas.esqueletos.mientras(c, p, { forma: 'filas', cuantos: 6, espera: 'Trayendo el directorio' })
+    /* 30/09 · la cabecera primero; la lista (y los botones de editar) llegan detrás */
+    O().cabecera(c, 'ubicacion', 'DIRECTORIO INSTITUCIONAL',
+      'Las dependencias de la Alcaldía: dónde quedan, su correo y sus líneas. Toca para escribir, llamar o llegar.');
+    var zona = K.nodo('<div></div>');
+    c.appendChild(zona);
+    K.piezas.esqueletos.mientras(zona, p, { forma: 'filas', cuantos: 6, espera: 'Trayendo el directorio' })
       .then(function () { pintar(c); })
-      ['catch'](function (e) { c.appendChild(C.errorCaja(e, function () { DIR = null; C.app.innerHTML = ''; vista(); })); });
+      ['catch'](function (e) { zona.appendChild(C.errorCaja(e, function () { DIR = null; C.app.innerHTML = ''; vista(); })); });
   }
 
   function pintar(c) {
