@@ -17,10 +17,14 @@
 
   function O() { return window.OFICINA; }
 
-  function cargar(fresco) {
+  function cargar(fresco, fondo) {
     if (DIR && !fresco) return Promise.resolve(DIR);
-    if (CARGANDO && !fresco) return CARGANDO;
-    CARGANDO = O().leer('directorio').then(function (r) { CARGANDO = null; DIR = (r && r.lista) || []; EDITAR = !!(r && r.editar); return DIR; },
+    if (CARGANDO && !fresco) {
+      /* 29/09 · la vista hereda lo que el inicio dejó en la cola de fondo */
+      if (!fondo && K.vista) K.vista.adoptar('directorio');
+      return CARGANDO;
+    }
+    CARGANDO = O().leer('directorio', {}, 0, { fondo: fondo }).then(function (r) { CARGANDO = null; DIR = (r && r.lista) || []; EDITAR = !!(r && r.editar); return DIR; },
       function (e) { CARGANDO = null; throw e; });
     return CARGANDO;
   }

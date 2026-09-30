@@ -52,10 +52,14 @@
     if (C.alCambiar) C.alCambiar(contar());
   }
 
-  function cargar(fresco) {
+  function cargar(fresco, fondo) {
     if (B && !fresco) return Promise.resolve(B);
-    if (CARGANDO && !fresco) return CARGANDO;
-    CARGANDO = O().leer('solicitudes', {}).then(function (d) { CARGANDO = null; LLENOS = {}; recibir(d); return B; },
+    if (CARGANDO && !fresco) {
+      /* 29/09 · la vista hereda lo que el inicio dejó en la cola de fondo */
+      if (!fondo && K.vista) K.vista.adoptar('solicitudes');
+      return CARGANDO;
+    }
+    CARGANDO = O().leer('solicitudes', {}, 0, { fondo: fondo }).then(function (d) { CARGANDO = null; LLENOS = {}; recibir(d); return B; },
       function (e) { CARGANDO = null; throw e; });
     return CARGANDO;
   }

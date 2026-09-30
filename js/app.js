@@ -310,11 +310,14 @@
   /** Lo que no se ve de entrada va en segundo plano (regla del UN SOLO LLAMADO). */
   function precargar() {
     if (PRECARGADO) return;
-    PRECARGADO = true;
-    setTimeout(function () {
-      if (puede('comunicados') && window.COMUS && window.COMUS.cargar) window.COMUS.cargar(false)['catch'](function () {});
+    /* 29/09 · temporizador de la VISTA y cola de fondo (kit.js, K.vista): si
+       la persona ya se fue del inicio no se pide; si va justo a una de las
+       dos vistas, la hereda. */
+    K.vista.luego(function () {
+      PRECARGADO = true;
+      if (puede('comunicados') && window.COMUS && window.COMUS.cargar) window.COMUS.cargar(false, true)['catch'](function () {});
       /* solo trae los datos; la vista se pinta cuando la abran */
-      if (puede('directorio') && window.DIRECTORIO) window.DIRECTORIO.cargar(false)['catch'](function () {});
+      if (puede('directorio') && window.DIRECTORIO) window.DIRECTORIO.cargar(false, true)['catch'](function () {});
     }, 1500);
   }
 
@@ -380,7 +383,7 @@
     K.piezas.creditos.montar(caja);
 
     if (acc.solicitudes && window.SOLIS) {
-      K.piezas.esqueletos.mientras(destino, window.SOLIS.cargar(false), { forma: 'ficha', cuantos: 1, espera: 'Cargando las solicitudes' })
+      K.piezas.esqueletos.mientras(destino, window.SOLIS.cargar(false, true), { forma: 'ficha', cuantos: 1, espera: 'Cargando las solicitudes' })
         .then(function () {
           var n = window.SOLIS.contar();
           burbujas(acc, n, admin);
