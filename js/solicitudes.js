@@ -36,6 +36,17 @@
 
   function O() { return window.OFICINA; }
 
+  /* 05/10/2026 · Las PENDIENTE (de asignación) solo las ven ADMIN y DEV.
+     Lo decide el CORE (bandeja.verPendientes); con un CORE anterior que no
+     manda la bandera, se deduce del rol. Aquí también se quitan si llegan. */
+  function vePend() {
+    if (B && B.verPendientes !== undefined) return !!B.verPendientes;
+    var y = (C.yo && C.yo()) || {};
+    return String(y.rol || '').split(/[,+\/]/).some(function (r) { r = K.norm(r); return r === 'ADMIN' || r === 'DEV'; });
+  }
+  function estadosVisibles() { return vePend() ? ESTADOS : ESTADOS.filter(function (e) { return e !== 'PENDIENTE'; }); }
+  function oculta(x) { return !!x && x.estado === 'PENDIENTE' && !vePend(); }
+
   /* ══════════════ los datos ══════════════ */
 
   function preparar(x) {
@@ -47,7 +58,7 @@
 
   function recibir(b) {
     B = b || { lista: [], conteos: {} };
-    B.lista = (B.lista || []).map(preparar);
+    B.lista = (B.lista || []).filter(function (x) { return !oculta(x); }).map(preparar);
     HORA = new Date();
     if (C.alCambiar) C.alCambiar(contar());
   }
@@ -70,6 +81,7 @@
     preparar(s);
     var i = -1;
     B.lista.forEach(function (x, k) { if (x.codigo === s.codigo) i = k; });
+    if (oculta(s)) { if (i >= 0) B.lista.splice(i, 1); LLENOS[s.codigo] = null; if (C.alCambiar) C.alCambiar(contar()); return; }
     if (i >= 0) {
       /* el COMUNICADOR solo ve las suyas: si ya no lo es, sale de su lista */
       if (!B.todas && !s.mia) B.lista.splice(i, 1);
@@ -155,7 +167,9 @@
 
   function leerFiltro() {
     var g = K.guardar.leer(FILTRO_K, null) || {};
-    return { estado: g.estado !== undefined ? g.estado : 'ABIERTAS', quien: g.quien || '', busca: '' };
+    var e = g.estado !== undefined ? g.estado : 'ABIERTAS';
+    if (e === 'PENDIENTE' && B && !vePend()) e = 'ABIERTAS';
+    return { estado: e, quien: g.quien || '', busca: '' };
   }
   function guardarFiltro() { K.guardar.escribir(FILTRO_K, { estado: F.estado, quien: F.quien }); }
 
@@ -164,6 +178,7 @@
     if (!F) F = leerFiltro();
     f = f || {};
     if (f.estado !== undefined) F.estado = f.estado;
+    if (F.estado === 'PENDIENTE' && B && !vePend()) F.estado = 'ABIERTAS';
     if (f.quien !== undefined) F.quien = f.quien;
     F.busca = '';
     guardarFiltro();
@@ -307,10 +322,12 @@
 
     K.piezas.esqueletos.mientras(lista, cargar(false), { forma: 'tarjetas', cuantos: 3, espera: 'Cargando las solicitudes' })
       .then(function () {
+        if (F.estado === 'PENDIENTE' && !vePend()) F.estado = 'ABIERTAS';
         pE = K.piezas.pastillas.montar(zE, { etiqueta: 'Estado', valor: F.estado,
           opciones: [{ valor: 'ABIERTAS', texto: 'Abiertas' }, { valor: 'PENDIENTE', texto: 'Pendientes', tono: 'aviso' },
                      { valor: 'EN PROCESO', texto: 'En proceso' }, { valor: 'VENCIDAS', texto: 'Entrega vencida', tono: 'malo' },
-                     { valor: 'REALIZADA', texto: 'Realizadas', tono: 'ok' }, { valor: '', texto: 'Todas' }],
+                     { valor: 'REALIZADA', texto: 'Realizadas', tono: 'ok' }, { valor: '', texto: 'Todas' }]
+                     .filter(function (o) { return o.valor !== 'PENDIENTE' || vePend(); }),
           alCambiar: function (v) { F.estado = v; guardarFiltro(); VER = 40; pintar(); } });
         if (B.todas) {
           pQ = K.piezas.pastillas.montar(zQ, { etiqueta: 'Quién', valor: F.quien, opciones: [{ valor: '', texto: 'Todo el equipo' }],
@@ -568,7 +585,7 @@
     zAt.appendChild(quien);
     if (puedeEstado) {
       var est = K.nodo('<div class="cm-estados" role="group" aria-label="Cambiar el estado"></div>');
-      ESTADOS.forEach(function (e) {
+      estadosVisibles().forEach(function (e) {
         var bt = K.nodo('<button type="button" class="kit-btn ' + (e === x.estado ? 'kit-btn--marca' : 'kit-btn--plano') + '" aria-pressed="' + (e === x.estado) + '">' + K.esc(TEXTO_ESTADO[e]) + '</button>');
         bt.addEventListener('click', function () {
           if (e === x.estado) return;
@@ -862,6 +879,12 @@
         K.piezas.guardado.mientras(K.pedir('solicitudCrear', cuerpo, { ms: 60000 }), {
           titulo: 'Registrando la solicitud', sub: d.evento || resumen(d.detalles, 60), pasos: ['Guardando…'], listo: { titulo: 'Solicitud registrada', paso: 'Lista' }
         }).then(function (r) {
+          /* 05/10: quien no es ADMIN ni DEV no ve la PENDIENTE: queda para que el administrador la reparta */
+          if (r.pendiente || oculta(r.solicitud)) {
+            K.aviso('Solicitud ' + r.codigo + ' registrada. Queda pendiente para que el administrador la reparta.', 'ok', 6000);
+            C.irA('solicitudes');
+            return;
+          }
           if (r.solicitud) poner(r.solicitud);
           else return cargar(true).then(function () { C.irA('solicitud/' + encodeURIComponent(r.codigo)); });
           C.irA('solicitud/' + encodeURIComponent(r.codigo));
@@ -894,6 +917,7 @@
     vista: vista, detalle: detalle, nueva: nueva,
     recibir: recibir, cargar: cargar, contar: contar, filtrar: filtrar, poner: poner, repartir: repartir, buscar: buscar,
     olvidar: function () { B = null; CARGANDO = null; LLENOS = {}; K.guardar.borrar(FILTRO_K); F = null; },
+    verPendientes: vePend,
     _datos: function () { return B; }, _filas: function () { if (!F) F = leerFiltro(); return filas(); }, _filtro: function () { return F; },
     _util: { relativo: relativo, diasHasta: diasHasta, fechaCorta: fechaCorta, hoyIso: hoyIso, TEXTO_ESTADO: TEXTO_ESTADO, cargaDe: cargaDe, textoPlano: textoPlano }
   };

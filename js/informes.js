@@ -45,6 +45,8 @@
 
   function todas() { var b = S()._datos(); return (b && b.lista) || []; }
   function esAdmin() { var b = S()._datos(); return !!(b && b.todas); }
+  /* 05/10: las PENDIENTE (de asignación) solo para ADMIN y DEV */
+  function vePend() { return !!(S().verPendientes && S().verPendientes()); }
 
   function pasa(x, sin) {
     sin = sin || {};
@@ -137,7 +139,7 @@
       resumen.appendChild(K.nodo('<p class="rp-resumen__rango">' + K.icono('reloj', 14) + ' ' + K.esc(textoRango()) + ' · por fecha de ' + (F.base === 'ingreso' ? 'ingreso' : 'entrega') +
         (esAdmin() ? '' : ' · ' + K.esc(O().nombre((C.yo() || {}).nombre))) + '</p>'));
       resumen.appendChild(K.nodo('<div class="ct-cifras">' +
-        [['Solicitudes', n.total], ['Realizadas', n.REALIZADA], ['En proceso', n['EN PROCESO']], ['Pendientes', n.PENDIENTE]].map(function (c, i) {
+        [['Solicitudes', n.total], ['Realizadas', n.REALIZADA], ['En proceso', n['EN PROCESO']], ['Pendientes', n.PENDIENTE]].filter(function (c) { return c[0] !== 'Pendientes' || vePend(); }).map(function (c, i) {
           return '<div class="ct-cifra' + (i === 1 ? ' rp-cifra--ok' : '') + '"><b>' + K.numero(c[1] || 0) + '</b><span>' + K.esc(c[0]) + '</span></div>';
         }).join('') + '</div>'));
       var reqs = Object.keys(n.req).sort(function (a, c) { return n.req[c] - n.req[a]; });
@@ -202,8 +204,10 @@
 
     K.piezas.esqueletos.mientras(lista, S().cargar(false), { forma: 'tarjetas', cuantos: 3, espera: 'Armando tus informes' })
       .then(function () {
+        if (F.estado === 'PENDIENTE' && !vePend()) { F.estado = ''; guardarFiltro(); }
         pE = K.piezas.pastillas.montar(zE, { etiqueta: 'Estado', valor: F.estado,
-          opciones: [{ valor: '', texto: 'Todas' }, { valor: 'REALIZADA', texto: 'Realizadas', tono: 'ok' }, { valor: 'EN PROCESO', texto: 'En proceso' }, { valor: 'PENDIENTE', texto: 'Pendientes', tono: 'aviso' }],
+          opciones: [{ valor: '', texto: 'Todas' }, { valor: 'REALIZADA', texto: 'Realizadas', tono: 'ok' }, { valor: 'EN PROCESO', texto: 'En proceso' }, { valor: 'PENDIENTE', texto: 'Pendientes', tono: 'aviso' }]
+            .filter(function (o) { return o.valor !== 'PENDIENTE' || vePend(); }),
           alCambiar: function (v) { F.estado = v; guardarFiltro(); VER = 50; pintar(); } });
         pQ = K.piezas.pastillas.montar(zQ, { etiqueta: 'Persona', valor: '', opciones: [{ valor: '', texto: 'Todo el equipo' }],
           alCambiar: function (v) { F.quien = v; VER = 50; pintar(); } });
@@ -253,6 +257,7 @@
       },
       resumen: [{ etiqueta: 'Solicitudes', valor: K.numero(n.total) }, { etiqueta: 'Realizadas', valor: K.numero(n.REALIZADA) },
                 { etiqueta: 'En proceso', valor: K.numero(n['EN PROCESO']) }, { etiqueta: 'Pendientes', valor: K.numero(n.PENDIENTE) }]
+                .filter(function (c) { return c.etiqueta !== 'Pendientes' || vePend(); })
     };
     if (esAdmin() && !F.quien) op.grupo = function (x) { return 'Atiende: ' + (x.asignados.map(O().nombre).join(', ') || 'sin asignar'); };
     return op;

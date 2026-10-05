@@ -123,7 +123,7 @@
     nueva: function () {
       return {
         guia: 'Registra una solicitud que llegó por otro medio. Lo obligatorio: **qué piden**, los **detalles**, la **fecha de entrega** (no puede ser pasada), **quién la pide** y su **secretaría**. ' +
-              (admin() ? 'Si escoges a alguien del equipo, queda EN PROCESO de una vez; si no, PENDIENTE para repartir.' : 'Queda PENDIENTE para que el administrador la reparta.'),
+              (admin() ? 'Si escoges a alguien del equipo, queda EN PROCESO de una vez; si no, PENDIENTE para repartir.' : 'Al registrarla pasa al administrador para que la reparta.'),
         botones: [
           { texto: '¿Por qué no hay antelación mínima?', responde: function () {
               return 'Los contratistas piden con **3 días** de antelación desde su app. Aquí la registra el propio equipo, así que solo se exige que la fecha no haya pasado.';
@@ -158,6 +158,8 @@
           { texto: '¿Qué estoy viendo?', responde: function () {
               var I = window.INFORMES; if (!I) return '';
               var f = I._filas(), n = I._cifras(f);
+              /* 05/10: las PENDIENTE (de asignación) solo para ADMIN y DEV */
+              if (!(S() && S().verPendientes && S().verPendientes())) return I._textoRango() + ': **' + n.total + '** solicitudes — ' + n.REALIZADA + ' realizadas y ' + n['EN PROCESO'] + ' en proceso.';
               return I._textoRango() + ': **' + n.total + '** solicitudes — ' + n.REALIZADA + ' realizadas, ' + n['EN PROCESO'] + ' en proceso y ' + n.PENDIENTE + ' pendientes.';
             } },
           { texto: '¿Qué requerimiento pidieron más?', responde: function () {

@@ -435,6 +435,8 @@
       [{ estado: 'EN PROCESO', quien: '' }, n['EN PROCESO'], 'En proceso'],
       [{ estado: 'VENCIDAS', quien: '' }, n.vencidas, 'Entrega vencida']
     ];
+    /* 05/10: las PENDIENTE (de asignación) solo para ADMIN y DEV */
+    if (!window.SOLIS.verPendientes()) lista.shift();
     if (admin) lista.push([{ estado: 'ABIERTAS', quien: 'SIN' }, n.sinAsignar, 'Sin asignar']);
     lista.push([{ estado: 'REALIZADA', quien: '' }, n.REALIZADA, 'Realizadas']);
     lista.forEach(function (c) {
