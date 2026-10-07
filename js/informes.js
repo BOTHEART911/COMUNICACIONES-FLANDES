@@ -84,7 +84,7 @@
     if (!F) F = leerFiltro();
     var caja = K.nodo('<div class="kit-ancho vista ct of rp rg tg cm"></div>');
     C.app.appendChild(caja);
-    O().cabecera(caja, 'pdf', 'MIS INFORMES', esAdmin()
+    O().cabecera(caja, 'pdf', 'MIS REGISTROS', esAdmin()
       ? 'Lo que atendió el equipo en el periodo: realizadas, en proceso y pendientes, por persona. Descárgalo en PDF o Excel.'
       : 'Lo que has atendido en el periodo. Descárgalo en PDF o Excel para tu informe de actividades.');
     var zR = K.nodo('<section class="kit-tarjeta rp-rango"></section>');
@@ -268,7 +268,9 @@
     var f = filas();
     if (esAdmin() && !F.quien) f = f.slice().sort(function (a, c) { return String(a.asignados.join()).localeCompare(String(c.asignados.join()), 'es') || String(fechaDe(a)).localeCompare(String(fechaDe(c))); });
     if (!f.length) return;
-    var nombre = ('Informe Comunicaciones ' + (F.desde ? O().fecha(F.desde).replace(/\//g, '-') : '') + (F.hasta && F.hasta !== F.desde ? ' a ' + O().fecha(F.hasta).replace(/\//g, '-') : '')).trim();
+    /* 06/10 · el nombre dice qué es, de quién y de cuándo */
+    var de = !esAdmin() ? O().nombre((C.yo() || {}).nombre) : (F.quien === 'SIN' ? 'sin asignar' : (F.quien && f[0] ? O().nombre((f[0].asignados || []).filter(function (a) { return K.norm(a) === F.quien; })[0] || '') : 'todo el equipo'));
+    var nombre = ('Informe Comunicaciones ' + (de ? de + ' ' : '') + (F.desde ? O().fecha(F.desde).replace(/\//g, '-') : '') + (F.hasta && F.hasta !== F.desde ? ' a ' + O().fecha(F.hasta).replace(/\//g, '-') : '')).trim();
     boton.disabled = true; boton.classList.add('kit-ocupado');
     var p = formato === 'pdf' ? K.piezas.exportar.aPDF(nombre, PDF, f, informe(f)) : K.piezas.exportar.aExcel(nombre, XLS, f);
     Promise.resolve(p).then(function (r) {

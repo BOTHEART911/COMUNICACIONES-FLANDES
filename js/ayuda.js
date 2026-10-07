@@ -224,7 +224,7 @@
   };
 
   var TITULOS = { inicio: 'Tu inicio', solicitudes: 'Solicitudes', solicitud: 'La solicitud', nueva: 'Nueva solicitud', repartir: 'Repartir',
-                  informes: 'Mis informes', comunicados: 'Comunicados', directorio: 'Directorio', solicitantes: 'Solicitantes externos' };
+                  informes: 'Mis registros', comunicados: 'Comunicados', directorio: 'Directorio', solicitantes: 'Solicitantes externos' };
 
   function montar(vista, extra) {
     if (!K.piezas.insights) return;

@@ -209,7 +209,7 @@
 
   function montarBanner() {
     var menu = [{ texto: 'Foto de perfil', al: abrirFoto }];
-    if (puede('misInformes')) menu.push({ texto: 'Mis informes', al: function () { irA('informes'); } });
+    if (puede('misInformes')) menu.push({ texto: 'Mis registros (descargar lo que hice)', al: function () { irA('informes'); } });
     menu.push({ texto: 'Actualizar contraseña', al: function () { K.piezas.sesion.cambiarClave(); } });
     menu.push({ texto: 'Instalar la app', al: function () { K.piezas.instalar.abrir(); } });
     /* soporte en TODAS las apps: hoja SOPORTE + grupo de desarrollo */
@@ -264,7 +264,7 @@
     solicitud: 'SOLICITUD',
     nueva: 'NUEVA SOLICITUD',
     repartir: 'REPARTIR',
-    informes: 'MIS INFORMES',
+    informes: 'MIS REGISTROS',
     comunicados: 'COMUNICADOS',
     directorio: 'DIRECTORIO',
     solicitantes: 'SOLICITANTES EXTERNOS'
@@ -363,7 +363,8 @@
     if (tS.length) bloque('SOLICITUDES', tS);
 
     var tE = [];
-    if (puede('misInformes')) tE.push(acceso('MIS INFORMES', 'Lo atendido por periodo, en PDF por bloques o en Excel',
+    /* 06/10 · MIS INFORMES pasa a llamarse MIS REGISTROS en todo el ecosistema: es donde cada quien descarga lo que hizo */
+    if (puede('misInformes')) tE.push(acceso('MIS REGISTROS', 'Lo que has atendido, por periodo. Descárgalo en PDF por bloques o en Excel',
       'img/pdf.webp', function () { irA('informes'); }));
     if (puede('comunicados')) tE.push(acceso('COMUNICADOS', 'Publica avisos con documentos: llegan como notificación a los contratistas',
       'img/chat.webp', function () { irA('comunicados'); }));
