@@ -83,6 +83,7 @@
   function vista() {
     if (!F) F = leerFiltro();
     var caja = K.nodo('<div class="kit-ancho vista ct of rp rg tg cm"></div>');
+    if (K.piezas.exportar && K.piezas.exportar.prepararGerencial) K.piezas.exportar.prepararGerencial();   /* 10/10 · informe gerencial listo antes del toque */
     C.app.appendChild(caja);
     O().cabecera(caja, 'pdf', 'MIS REGISTROS', esAdmin()
       ? 'Lo que atendió el equipo en el periodo: realizadas, en proceso y pendientes, por persona. Descárgalo en PDF o Excel.'
