@@ -337,7 +337,7 @@
     configurar: function (c) { C = c || {}; },
     vista: vista,
     olvidar: function () { K.guardar.borrar(FILTRO_K); F = null; },
-    _filas: function () { if (!F) F = leerFiltro(); return filas(); }, _filtro: function () { return F; }, _cifras: cifras, _informe: informe, _textoRango: textoRango,
+    _filas: function () { if (!F) F = leerFiltro(); return filas(); }, _filtro: function () { return F; }, _cifras: cifras, _informe: informe, _textoRango: textoRango, _gerencial: specGerencial,
     PDF: PDF, XLS: XLS
   };
 }());
