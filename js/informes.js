@@ -105,7 +105,8 @@
     caja.appendChild(resumen);
     var descargas = K.nodo('<div class="rp-bajar">' +
       '<button type="button" class="kit-btn kit-btn--marca" data-f="pdf">' + K.icono('pdf', 16) + ' Descargar PDF</button>' +
-      '<button type="button" class="kit-btn kit-btn--plano" data-f="xlsx">' + K.icono('hoja', 16) + ' Descargar Excel</button></div>');
+      '<button type="button" class="kit-btn kit-btn--plano" data-f="xlsx">' + K.icono('hoja', 16) + ' Descargar Excel</button>' +
+      '<button type="button" class="kit-btn kit-btn--plano rp-gerencial" data-f="gerencial">' + K.icono('grafica', 16) + ' Informe gerencial</button></div>');
     caja.appendChild(descargas);
     var conteo = K.nodo('<p class="ct-conteo" aria-live="polite"></p>');
     caja.appendChild(conteo);
@@ -196,7 +197,7 @@
       var f = filas();
       pintarResumen(f);
       conteo.innerHTML = '<b>' + K.numero(f.length) + '</b> ' + (f.length === 1 ? 'solicitud' : 'solicitudes');
-      descargas.querySelectorAll('button').forEach(function (x) { x.disabled = !f.length; });
+      descargas.querySelectorAll('button').forEach(function (x) { x.disabled = x.getAttribute('data-f') === 'gerencial' ? !delPeriodo().length : !f.length; });
       pintarLista();
     }
 
@@ -263,7 +264,59 @@
     return op;
   }
 
+  /* ══════════════ 10/10 · INFORME GERENCIAL ══════════════
+     Todas las solicitudes del periodo (por la fecha que esté escogida:
+     entrega o ingreso) y de la persona escogida, sin el filtro de estado
+     ni la búsqueda: el panorama completo. Sale de lo que ya está en el
+     teléfono; la pieza kit/gerencial.js se baja al tocar el botón. */
+  function delPeriodo() { return specGerencial().registros; }
+  function specGerencial() {
+    var guarda = F.busca; F.busca = '';
+    var regs = todas().filter(function (x) { return pasa(x, { estado: true }) && fechaDe(x); });
+    F.busca = guarda;
+    if (!vePend()) regs = regs.filter(function (x) { return x.estado !== 'PENDIENTE'; });
+    var persona = !esAdmin() ? O().nombre((C.yo() || {}).nombre) : (F.quien === 'SIN' ? 'Solicitudes sin asignar' :
+      (F.quien && regs[0] ? O().nombre((regs[0].asignados || []).filter(function (a) { return K.norm(a) === F.quien; })[0] || '') : 'Todo el equipo de Comunicaciones'));
+    var rango = (F.desde ? O().fecha(F.desde).replace(/\//g, '-') : '') + (F.hasta && F.hasta !== F.desde ? ' a ' + O().fecha(F.hasta).replace(/\//g, '-') : '');
+    var req = {};
+    regs.forEach(function (x) { (x.requerimientos || []).forEach(function (r) { req[r] = (req[r] || 0) + 1; }); });
+    var TXT = (S()._util && S()._util.TEXTO_ESTADO) || {};
+    return {
+      app: (window.MARCA && window.MARCA.TITULO) || 'Comunicaciones', persona: persona, desde: F.desde, hasta: F.hasta,
+      nombre: ['Informe gerencial Comunicaciones', persona, rango].filter(Boolean).join(' '),
+      palabra: ['solicitud', 'solicitudes'],
+      etiquetas: { tipo: 'Estado', categoria: 'Secretaría', sujeto: 'Solicitante', sujetos: 'solicitantes' },
+      tonos: { ok: 'Realizadas', info: 'En proceso', aviso: 'Pendientes' },
+      registros: regs.map(function (x) {
+        return { fecha: fechaDe(x), tipo: TXT[x.estado] || x.estado || 'SIN ESTADO',
+                 tono: x.estado === 'REALIZADA' ? 'ok' : (x.estado === 'PENDIENTE' ? 'aviso' : 'info'),
+                 categoria: O().titulo(x.secretaria) || '', sujeto: O().nombre(x.responsable) || '',
+                 ref: x.codigo + (x.evento ? ' · ' + String(x.evento).slice(0, 40) : '') };
+      }),
+      hallazgos: F.base === 'ingreso' ? ['El periodo se midió por fecha de INGRESO de la solicitud.'] : ['El periodo se midió por fecha de ENTREGA de la solicitud.'],
+      secciones: Object.keys(req).length ? [{
+        titulo: 'Requerimientos atendidos',
+        intro: 'Cada solicitud puede pedir varios productos (diseño, fotografía, video, publicación...). Aquí se cuentan uno a uno.',
+        graficas: [{ titulo: 'Requerimientos por tipo', tipo: 'barrasH', titular: false, max: 14,
+                     datos: Object.keys(req).map(function (k) { return { etiqueta: k, valor: req[k] }; }).sort(function (a, b) { return b.valor - a.valor; }) }]
+      }] : []
+    };
+  }
+  function gerencial(boton) { lanzarGerencial(specGerencial(), boton, 'solicitudes'); }
+
+  function lanzarGerencial(sp, boton, palabra) {
+    var ex = K.piezas.exportar;
+    if (!ex || !ex.aGerencial) { K.aviso('El informe gerencial no está disponible en esta versión. Recarga la app.', 'aviso', 5000); return; }
+    if (!sp.registros.length) { K.aviso('No hay ' + palabra + ' en ese periodo para armar el informe.', 'aviso', 4000); return; }
+    boton.disabled = true; boton.classList.add('kit-ocupado');
+    ex.aGerencial(sp).then(function (r) {
+      K.aviso('Informe gerencial descargado (' + r.paginas + ' páginas).', 'ok', 3500);
+    }, function (e) { K.aviso((e && e.message) || 'No se pudo armar el informe.', 'malo', 6000); })
+      .then(function () { boton.disabled = false; boton.classList.remove('kit-ocupado'); });
+  }
+
   function bajar(formato, boton) {
+    if (formato === 'gerencial') { gerencial(boton); return; }
     if (!K.piezas.exportar) { K.aviso('La descarga no está disponible en esta versión.', 'aviso'); return; }
     var f = filas();
     if (esAdmin() && !F.quien) f = f.slice().sort(function (a, c) { return String(a.asignados.join()).localeCompare(String(c.asignados.join()), 'es') || String(fechaDe(a)).localeCompare(String(fechaDe(c))); });
