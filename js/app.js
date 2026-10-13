@@ -84,10 +84,14 @@
   /* 25/09 · el 'inicio' de verdad, por detrás: se aplica, se guarda y, si la
      persona sigue en el inicio, se vuelve a pintar con lo nuevo. */
   function refrescarArranque() {
+    var notifAntes = !!(ARRANQUE && ARRANQUE.notificar);
     leer('inicio').then(function (d) {
       return arranque(false, { arranque: d, refresco: true });
     }).then(function () {
       var v = String(location.hash || '').replace(/^#\/?/, '').split('/')[0] || 'inicio';
+      /* 13/10 · el detalle abierto se pintó con el arranque guardado: si lo nuevo
+         cambia lo que se puede hacer ahí (NOTIFICAR), se repinta (sin modal encima) */
+      if (v === 'solicitud' && notifAntes !== !!(ARRANQUE && ARRANQUE.notificar) && !document.querySelector('.rv-modal')) { enrutar(); return; }
       /* 29/09 · tambien las listas: si la persona ya entro a SOLICITUDES o a
          REPARTIR mientras llegaba lo nuevo, se vuelven a pintar con lo de ahora
          (antes se quedaba viendo lo de la ultima vez que abrio la app). */
