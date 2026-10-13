@@ -642,6 +642,12 @@
       gr.addEventListener('click', function () { alGrupo(x, gr); });
       zA.appendChild(ed); zA.appendChild(gr);
     }
+    /* 13/10 · NOTIFICAR: copia de la asignación por el WhatsApp del dispositivo (ADMIN y DEV) */
+    if (C.notificar && C.notificar() && x.estado === 'EN PROCESO' && x.asignados.length) {
+      var nt = K.nodo('<button type="button" class="kit-btn kit-btn--plano">' + K.icono('whatsapp', 16) + ' Notificar</button>');
+      nt.addEventListener('click', K.piezas.antidoble.una(function () { notificar(x); }, { ms: 1500 }));
+      zA.appendChild(nt);
+    }
     caja.appendChild(zA);
     K.piezas.creditos.montar(caja);
   }
@@ -731,6 +737,87 @@
     var k = K.norm(n), c = 0;
     ((B && B.lista) || []).forEach(function (x) { if (x._abierta && x.asignados.some(function (a) { return K.norm(a) === k; })) c++; });
     return c === 1 ? '1 abierta' : c + ' abiertas';
+  }
+
+  /* ══════════════ NOTIFICAR (13/10/2026) ══════════════
+     Copia de la asignación por el WhatsApp DEL DISPOSITIVO (sin BuilderBot).
+     El celular y la plantilla llegan con el inicio: el toque no espera al
+     servidor. La bitácora (quién y cuándo) sale DE FONDO, con su rid. */
+
+  var PLANTILLA_COPIA = 'Hola *{nombre}*\nTe envío mensaje de copia de la solicitud *{codigo}* en la App de Comunicaciones:\n> {evento}\nEntrega o publicación: *{entrega}*\n\nCordialmente,\n\n*{quien}*';
+  var MESES_L = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+
+  /** 'aaaa-mm-dd' -> '13 de octubre' (igual que FC9_fechaLarga_ del CORE). */
+  function fechaLarga(iso) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || ''));
+    return m ? Number(m[3]) + ' de ' + MESES_L[Number(m[2]) - 1] : '';
+  }
+
+  /** Rellena la plantilla. Una línea que queda sin dato ("> " o "**") se quita, como en la asignación. */
+  function llenarCopia(t, d) {
+    var s = String(t || PLANTILLA_COPIA).replace(/\{([a-zA-Z_]+)\}/g, function (m, k) { return d[k] == null ? '' : String(d[k]); });
+    var out = [];
+    s.split('\n').forEach(function (l) {
+      var citaVacia = /^\s*>\s*$/.test(l);
+      if (citaVacia || /\*\*/.test(l)) {
+        if (citaVacia && out.length && /:$/.test(out[out.length - 1])) out[out.length - 1] = out[out.length - 1].replace(/:$/, '.');
+        return;
+      }
+      out.push(l);
+    });
+    return out.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+  }
+
+  function celularDe(nombre) {
+    var k = K.norm(nombre), p = (C.equipo() || []).filter(function (q) { return K.norm(q.nombre) === k; })[0];
+    var t = String((p && p.telefono) || '').replace(/\D/g, '');
+    if (t.length === 12 && t.indexOf('57') === 0) t = t.slice(2);
+    return /^3\d{9}$/.test(t) ? t : '';
+  }
+
+  function enlaceCopia(x, nombre) {
+    var tel = celularDe(nombre);
+    if (!tel) return '';
+    var msg = llenarCopia((C.notificar() || {}).wa, {
+      nombre: nombre, codigo: x.codigo, evento: x.evento || '',
+      entrega: x.publicacion ? fechaLarga(x.publicacion) : '', quien: (C.yo() || {}).nombre || ''
+    });
+    return 'https://wa.me/57' + tel + '?text=' + encodeURIComponent(msg);
+  }
+
+  /** La bitácora, de fondo: nunca frena ni bloquea el toque. */
+  function apuntarCopia(x, nombres) {
+    K.pedir('notificarCopia', { codigo: x.codigo, asignados: nombres }, { ms: 45000 })
+      ['catch'](function (e) { K.aviso('El WhatsApp se abrió, pero no quedó en la bitácora (' + ((e && e.message) || 'sin detalle') + ').', 'aviso', 6000); });
+  }
+
+  function notificar(x) {
+    if (x.asignados.length === 1) {
+      var url = enlaceCopia(x, x.asignados[0]);
+      if (!url) { K.aviso(O().nombre(x.asignados[0]) + ' no tiene celular en USUARIOS. Agrégalo en ADMIN.', 'aviso', 6000); return; }
+      window.open(url, '_blank', 'noopener');
+      apuntarCopia(x, [x.asignados[0]]);
+      return;
+    }
+    /* varios asignados: un WhatsApp por persona (el teléfono solo abre uno a la vez) */
+    var cuerpo = K.nodo('<div><p class="formulario__nota">Toca a cada persona: se abre tu WhatsApp con la copia de la asignación lista para enviar.</p><div class="cm-equipo"></div></div>');
+    var eq = cuerpo.querySelector('.cm-equipo');
+    x.asignados.forEach(function (n) {
+      var url = enlaceCopia(x, n);
+      var b = K.nodo('<button type="button" class="cm-persona" aria-pressed="false"></button>');
+      if (K.piezas.personas) b.appendChild(K.piezas.personas.avatar(n, { tam: 34, sinZoom: true }));
+      b.appendChild(K.nodo('<span>' + K.esc(O().nombre(n)) + '</span>'));
+      b.insertAdjacentHTML('beforeend', '<i class="cm-persona__carga">' + (url ? 'Enviar' : 'Sin celular') + '</i>');
+      if (!url) b.disabled = true;
+      else b.addEventListener('click', K.piezas.antidoble.una(function () {
+        window.open(url, '_blank', 'noopener');
+        b.setAttribute('aria-pressed', 'true');
+        b.querySelector('.cm-persona__carga').textContent = 'Abierto';
+        apuntarCopia(x, [n]);
+      }, { ms: 1500, sinEscudo: true }));
+      eq.appendChild(b);
+    });
+    var m = O().modal({ titulo: 'Notificar ' + x.codigo, cuerpo: cuerpo, botones: [{ texto: 'Listo', icono: 'check', marca: true, al: function () { m.cerrar(); } }] });
   }
 
   function alGrupo(x, boton) {
@@ -919,6 +1006,7 @@
     olvidar: function () { B = null; CARGANDO = null; LLENOS = {}; K.guardar.borrar(FILTRO_K); F = null; },
     verPendientes: vePend,
     _datos: function () { return B; }, _filas: function () { if (!F) F = leerFiltro(); return filas(); }, _filtro: function () { return F; },
-    _util: { relativo: relativo, diasHasta: diasHasta, fechaCorta: fechaCorta, hoyIso: hoyIso, TEXTO_ESTADO: TEXTO_ESTADO, cargaDe: cargaDe, textoPlano: textoPlano }
+    _util: { relativo: relativo, diasHasta: diasHasta, fechaCorta: fechaCorta, hoyIso: hoyIso, TEXTO_ESTADO: TEXTO_ESTADO, cargaDe: cargaDe, textoPlano: textoPlano,
+             llenarCopia: llenarCopia, fechaLarga: fechaLarga, enlaceCopia: enlaceCopia, celularDe: celularDe }
   };
 }());

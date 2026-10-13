@@ -158,6 +158,9 @@
               yo: function () { return YO || {}; },
               config: function () { return (ARRANQUE && ARRANQUE.config) || {}; },
               asignables: function () { return (ARRANQUE && ARRANQUE.asignables) || []; },
+              /* 13/10 · NOTIFICAR: el CORE manda celulares y plantilla solo a ADMIN y DEV (null = no notifica) */
+              equipo: function () { return (ARRANQUE && ARRANQUE.equipo) || []; },
+              notificar: function () { return (ARRANQUE && ARRANQUE.notificar) || null; },
               requerimientos: function () { return (ARRANQUE && ARRANQUE.requerimientos) || []; },
               secretarias: function () { return (ARRANQUE && ARRANQUE.secretarias) || []; },
               /* los números del inicio siguen a la lista sin otro viaje */
