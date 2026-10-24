@@ -240,6 +240,8 @@
     configurar: function (c) { C = c || {}; },
     vista: vista, cargar: cargar,
     olvidar: function () { D = null; CARGANDO = null; FILTRO = 'ACTIVO'; BUSCA = ''; },
+    /* 24/10 · el asistente lleva a la lista con la pastilla ya puesta */
+    filtrar: function (f) { FILTRO = f && f.que !== undefined ? f.que : 'ACTIVO'; BUSCA = ''; },
     _datos: function () { return D; }, _enlaceWa: enlaceWa, _mensaje: mensajeDe
   };
 }());
