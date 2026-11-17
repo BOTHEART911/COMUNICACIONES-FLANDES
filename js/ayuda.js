@@ -123,10 +123,10 @@
     nueva: function () {
       return {
         guia: 'Registra una solicitud que llegó por otro medio. Lo obligatorio: **qué piden**, los **detalles**, la **fecha de entrega** (no puede ser pasada), **quién la pide** y su **secretaría**. ' +
-              (admin() ? 'Si escoges a alguien del equipo, queda EN PROCESO de una vez; si no, PENDIENTE para repartir.' : 'Al registrarla pasa al administrador para que la reparta.'),
+              (admin() ? 'Si escoges a alguien del equipo, queda EN PROCESO de una vez; si no, PENDIENTE para repartir. Si la pide la Alcaldesa, marca **La solicita la Alcaldesa**: queda a su nombre y de DESPACHO MUNICIPAL, no del tuyo.' : 'Al registrarla pasa al administrador para que la reparta.'),
         botones: [
           { texto: '¿Por qué no hay antelación mínima?', responde: function () {
-              return 'Los contratistas piden con **3 días** de antelación desde su app. Aquí la registra el propio equipo, así que solo se exige que la fecha no haya pasado.';
+              return 'Los contratistas, supervisores y solicitantes externos piden con **7 días** de antelación desde sus apps. Aquí la registra el propio equipo, así que solo se exige que la fecha no haya pasado.';
             } }
         ]
       };

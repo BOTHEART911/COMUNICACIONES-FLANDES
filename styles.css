@@ -2996,3 +2996,11 @@
 
 /* 10/10 · botón INFORME GERENCIAL (Mis registros): el ícono en dorado lo distingue de PDF y Excel */
 .rp-gerencial svg { color: #c99e2e; }
+
+/* 17/11 · «La solicita la Alcaldesa» (ADMIN) */
+.cm-alc { display: flex; align-items: flex-start; gap: 10px; margin: 2px 0 12px; padding: 11px 13px; border: 1px solid var(--k-linea); border-radius: var(--k-r-md, 12px); cursor: pointer; background: var(--k-papel); }
+.cm-alc input { width: 18px; height: 18px; margin-top: 2px; accent-color: var(--k-marca); flex: 0 0 auto; }
+.cm-alc span { display: flex; flex-direction: column; gap: 2px; }
+.cm-alc b { font: 700 14px/1.3 var(--k-fuente); }
+.cm-alc small { font: 500 12.5px/1.35 var(--k-fuente); color: var(--k-tinta-2); }
+.cm-alc--on { border-color: var(--k-marca); background: rgba(var(--k-marca-rgb), .07); }

@@ -846,6 +846,9 @@
   }
 
   /** Arma el formulario. x = la solicitud a editar (o null para una nueva). Devuelve {nodo, datos(), falta()}. */
+  /* 17/11 · la Alcaldesa (el CORE manda los datos reales: MARCA_ALCALDESA y su registro en USUARIOS) */
+  var ALCALDESA = { nombre: 'ANA JUDITH GAMBOA MANTILLA', dependencia: 'DESPACHO MUNICIPAL', cargo: 'ALCALDESA' };
+
   function formulario(x, conQuien) {
     x = x || {};
     var f = K.nodo('<div class="formulario tr-form cm-form"></div>');
@@ -882,6 +885,14 @@
     var otr = K.nodo('<textarea rows="2" maxlength="1000"></textarea>'); otr.value = x.otros || '';
     f.appendChild(campo('Otros', '', otr, false));
     f.appendChild(K.nodo('<h3 class="grupo__t grupo__t--sub">Quién la pide</h3>'));
+    /* 17/11 · «La solicita la Alcaldesa» (solo ADMIN, solo al registrar): la solicitud queda a nombre de
+       la Alcaldesa y su dependencia, no de quien la registra. El CORE pone los datos (Ajustes1117.gs). */
+    var alc = null;
+    if (conQuien && !x.codigo) {
+      alc = K.nodo('<label class="cm-alc"><input type="checkbox"><span><b>La solicita la Alcaldesa</b>' +
+        '<small>Queda a nombre de ' + K.esc(O().nombre(ALCALDESA.nombre)) + ' (Alcaldesa) · ' + K.esc(O().titulo(ALCALDESA.dependencia)) + '</small></span></label>');
+      f.appendChild(alc);
+    }
     var res = K.nodo('<input type="text" maxlength="150" placeholder="Nombre de quien solicita">'); res.value = x.responsable || '';
     f.appendChild(campo('Responsable', '', res, true));
     var sec = K.nodo('<select><option value="">Escoge la secretaría</option></select>');
@@ -894,6 +905,21 @@
     var tel = K.nodo('<input type="tel" inputmode="numeric" maxlength="10" placeholder="Celular de 10 dígitos">'); tel.value = x.contacto || '';
     tel.addEventListener('input', function () { tel.value = tel.value.replace(/\D/g, '').slice(0, 10); });
     f.appendChild(campo('Contacto', '', tel, false));
+    if (alc) {
+      var antes = null;
+      alc.querySelector('input').addEventListener('change', function () {
+        var on = this.checked;
+        if (on) {
+          antes = { res: res.value, sec: sec.value, car: car.value };
+          if (![].some.call(sec.options, function (o) { return K.norm(o.value) === K.norm(ALCALDESA.dependencia); })) {
+            var o = document.createElement('option'); o.value = ALCALDESA.dependencia; o.textContent = ALCALDESA.dependencia; sec.appendChild(o);
+          }
+          res.value = ALCALDESA.nombre; sec.value = [].filter.call(sec.options, function (o) { return K.norm(o.value) === K.norm(ALCALDESA.dependencia); })[0].value; car.value = ALCALDESA.cargo;
+        } else if (antes) { res.value = antes.res; sec.value = antes.sec; car.value = antes.car; }
+        res.disabled = sec.disabled = car.disabled = on;
+        alc.classList.toggle('cm-alc--on', on);
+      });
+    }
 
     var eq = null;
     if (conQuien) {
@@ -934,7 +960,8 @@
       if (d.contacto && !/^\d{10}$/.test(d.contacto)) return 'El contacto debe ser un celular de 10 dígitos.';
       return '';
     }
-    return { nodo: f, datos: datos, elegidos: elegidos, falta: falta };
+    function alcaldesa() { return !!(alc && alc.querySelector('input').checked); }
+    return { nodo: f, datos: datos, elegidos: elegidos, falta: falta, alcaldesa: alcaldesa };
   }
 
   function nueva() {
@@ -963,6 +990,7 @@
         si.disabled = true;
         var cuerpo = { campos: d };
         if (admin) cuerpo.asignados = asig;
+        if (admin && fm.alcaldesa()) cuerpo.alcaldesa = true;   /* 17/11 · a nombre de la Alcaldesa */
         K.piezas.guardado.mientras(K.pedir('solicitudCrear', cuerpo, { ms: 60000 }), {
           titulo: 'Registrando la solicitud', sub: d.evento || resumen(d.detalles, 60), pasos: ['Guardando…'], listo: { titulo: 'Solicitud registrada', paso: 'Lista' }
         }).then(function (r) {
