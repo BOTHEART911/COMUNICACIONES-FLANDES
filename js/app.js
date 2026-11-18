@@ -353,7 +353,7 @@
     'DRIVE DE HACIENDA': 'nube', 'IR A SECOP II': 'globo', 'DIRECTORIO INSTITUCIONAL': 'ubicacion', 'DIRECTORIO': 'ubicacion',
     'MI FIRMA Y MI FOTO': 'imagen', 'AGREGAR CONTRATISTA': 'mas', 'CARGA MASIVA': 'hoja', 'SOLICITUDES': 'comentario',
     'ÓRDENES DE PAGO': 'moneda', 'CONFIGURACIÓN': 'herramienta', 'EGRESOS PENDIENTES': 'reloj', 'EGRESOS EMITIDOS': 'check',
-    'CUENTAS PAGADAS': 'moneda', 'NUEVA SOLICITUD': 'mas', 'REPARTIR': 'intercambiar', 'SOLICITANTES EXTERNOS': 'persona',
+    'CUENTAS PAGADAS': 'moneda', 'NUEVA SOLICITUD': 'mas', 'REPARTIR': 'compartir', 'SOLICITANTES EXTERNOS': 'persona',
     'SOPORTE': 'salvavidas', 'SOPORTES': 'salvavidas', 'ASISTENTE DE AYUDA': 'robot', 'BITÁCORA · MIS REGISTROS': 'archivo',
     'CUENTAS ATRASADAS': 'vencido', 'MANTENIMIENTO': 'candado', 'MENSAJES Y AVISOS': 'sobre', 'MI BOT': 'whatsapp',
     'RECORDATORIOS': 'campana', 'TABLERO DE RENDIMIENTO': 'velocimetro', 'TABLERO DEL ECOSISTEMA': 'grafica',
